@@ -1,0 +1,39 @@
+name: 記憶の登録
+description: 決定・事実・制約・好み・TODOを記憶APIに書き込む（同期botが取り込みます）
+title: "[memory] "
+labels: ["memory"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ⚠ 個人情報・顧客機密を書かないでください（このAPIの保安設計: 書いた瞬間に防ぐ）。
+        このissueは同期botによって記憶APIに正本化されます。issue自体が根拠のpermalinkになります。
+        type:* ラベル（type:decision 等）を1つ付けてください。
+  - type: textarea
+    id: content
+    attributes:
+      label: 内容
+      description: 記憶の本文。一文で言えるならそのまま一行で。
+    validations:
+      required: true
+  - type: textarea
+    id: reason
+    attributes:
+      label: 理由
+      description: type:decision の場合は必須。
+    validations:
+      required: false
+  - type: input
+    id: evidence
+    attributes:
+      label: 根拠permalink
+      description: 開ける形の参照（URL/permalink）。type:decision の場合は必須。
+    validations:
+      required: false
+  - type: input
+    id: ttl
+    attributes:
+      label: ttl_days
+      description: TODOは必須（既定14日）。制約は付けられない。未入力なら永続。
+    validations:
+      required: false

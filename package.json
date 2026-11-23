@@ -1,0 +1,38 @@
+{
+  "name": "memory_api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "tsx watch src/serve.ts",
+    "typecheck": "tsc --noEmit",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "token": "tsx src/db/token.ts",
+    "db:seed": "tsx src/db/seed.ts",
+    "db:dump": "tsx src/db/dump.ts",
+    "eval": "tsx src/eval/golden.ts",
+    "eval:json": "tsx src/eval/golden.ts --json",
+    "simdistr": "tsx src/eval/simdistr.ts",
+    "probe": "tsx src/eval/probe.ts",
+    "mcp": "tsx src/mcp/export.ts"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.38.3",
+    "hono": "^4.6.14",
+    "postgres": "^3.4.5",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@hono/node-server": "^1.13.7",
+    "@types/node": "^22.10.2",
+    "dotenv": "^16.4.7",
+    "drizzle-kit": "^0.30.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "zod-to-json-schema": "^3.24.0"
+  }
+}
