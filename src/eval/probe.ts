@@ -26,9 +26,9 @@ import { db, memories } from "../../api/[...path]";
 //   - golden質問の top-1/top-3(対象の埋め込み空間の中でのrank当て)
 //   - 消費リクエスト数(無料枠10,000の予算表の種)
 
-interface QRow { q: string; expected: string }
+type QRow = { q: string; expected: string }
 
-function splitCsvLine(line: string): string[] {
+const splitCsvLine = (line: string): string[] => {
   const out: string[] = [];
   let cur = "";
   let quoted = false;
@@ -47,7 +47,7 @@ function splitCsvLine(line: string): string[] {
   return out.map((s) => s.trim());
 }
 
-async function loadGolden(): Promise<QRow[]> {
+const loadGolden = async (): Promise<QRow[]> => {
   const raw = await readFile(new URL("../../data/golden.csv", import.meta.url), "utf8");
   return raw.split(/\r?\n/).map((s) => s.trim())
     .filter((s) => s !== "" && !s.startsWith("q,"))
@@ -59,9 +59,9 @@ async function loadGolden(): Promise<QRow[]> {
 }
 
 // 対象エンドポイントへの1回の埋め込み呼び出し(exact 1 request)
-async function probeEmbed(
+const probeEmbed = async (
   texts: string[], baseUrl: string, apiKey: string, model: string,
-): Promise<{ vecs: number[][]; ms: number; status: number }> {
+): Promise<{ vecs: number[][]; ms: number; status: number }> => {
   const t0 = performance.now();
   const res = await fetch(baseUrl.replace(/\/+$/, "") + "/embeddings", {
     method: "POST",
@@ -78,13 +78,13 @@ async function probeEmbed(
   return { vecs, ms, status: res.status };
 }
 
-function percentile(sorted: number[], p: number): number {
+const percentile = (sorted: number[], p: number): number => {
   if (sorted.length === 0) return 0;
   const idx = Math.min(sorted.length - 1, Math.ceil((p / 100) * sorted.length) - 1);
   return sorted[Math.max(0, idx)];
 }
 
-function cosine(a: number[], b: number[]): number {
+const cosine = (a: number[], b: number[]): number => {
   let dot = 0, na = 0, nb = 0;
   const n = Math.min(a.length, b.length);
   for (let i = 0; i < n; i++) {
@@ -96,7 +96,7 @@ function cosine(a: number[], b: number[]): number {
   return dot / (Math.sqrt(na) * Math.sqrt(nb));
 }
 
-async function main() {
+const main = async () => {
   const baseUrl = process.env.PROBE_BASE_URL;
   const apiKey = process.env.PROBE_API_KEY;
   const model = process.env.PROBE_MODEL;

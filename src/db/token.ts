@@ -7,7 +7,7 @@ import { apiTokens, db, hashToken } from "../../api/[...path]";
 
 // トークン発行: npm run token -- <name> <read|write|admin>
 // secret は二度と表示されない（DB には sha256 ハッシュのみ置く）
-async function main() {
+const main = async () => {
   const [name, role] = process.argv.slice(2);
   if (!name || !role || !["read", "write", "admin"].includes(role)) {
     console.error("usage: npm run token -- <name> <read|write|admin>");

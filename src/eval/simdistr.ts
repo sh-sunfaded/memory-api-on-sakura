@@ -8,7 +8,7 @@ import { db, memories } from "../../api/[...path]";
 // 類似度分布ダンプ (2026-11-23, さくらコンテスト準備・409閾値較正の基線測定):
 //   DB内の active 記憶の埋め込みを全件読み、ペアごとのコサイン類似度分布を出す。
 //   基線として最初に一回回し、埋め込み空間が変わったら同じものを回し直す。
-//   閾値は空間ごとのこの分布の実測の上に載せる(0.85は初手の仮置き)。
+//   閾値は空間ごとのこの分布の実測の上に載せる (0.85は初手の仮置き)。
 //
 //   読み取り専用(SELECTのみ)。埋め込みAPIは呼ばないのでリクエスト消費ゼロ。
 //
@@ -23,9 +23,9 @@ import { db, memories } from "../../api/[...path]";
 //   - 最近傍類似度(per-memory nearest)の p50/p90/p99
 //     (= 「次に書く内容が 既存の何とかぶるか」の実測分布。閾値はこの上に載せる)
 
-interface Row { id: string; title: string; scopeType: string; scopeId: string; vec: number[] }
+type Row = { id: string; title: string; scopeType: string; scopeId: string; vec: number[] }
 
-function cosine(a: number[], b: number[]): number {
+const cosine = (a: number[], b: number[]): number => {
   let dot = 0, na = 0, nb = 0;
   for (let i = 0; i < a.length; i++) {
     dot += a[i] * b[i];
@@ -36,13 +36,13 @@ function cosine(a: number[], b: number[]): number {
   return dot / (Math.sqrt(na) * Math.sqrt(nb));
 }
 
-function percentile(sorted: number[], p: number): number {
+const percentile = (sorted: number[], p: number): number => {
   if (sorted.length === 0) return 0;
   const idx = Math.min(sorted.length - 1, Math.ceil((p / 100) * sorted.length) - 1);
   return sorted[Math.max(0, idx)];
 }
 
-async function main() {
+const main = async () => {
   const outFlag = process.argv.indexOf("--out");
   const outFile = outFlag >= 0 ? process.argv[outFlag + 1] : null;
 

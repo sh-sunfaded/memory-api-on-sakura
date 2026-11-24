@@ -14,14 +14,14 @@ import { db, memories, memoryRevisions } from "../../api/[...path]";
 //   使い回せず、かつ容量が重い。--with-embedding で温存用に含められる。
 //
 // 使い方:
-//   npm run dump -- --out data/dump-20261123.json
-//   npm run dump -- --out data/dump-full.json --with-embedding
+//   npm run db:dump -- --out data/dump-20261123.json
+//   npm run db:dump -- --out data/dump-full.json --with-embedding
 
-function iso(d: Date | null): string | null {
+const iso = (d: Date | null): string | null => {
   return d instanceof Date ? d.toISOString() : null;
 }
 
-async function main() {
+const main = async () => {
   const args = process.argv.slice(2);
   const outIdx = args.indexOf("--out");
   const outFile = outIdx >= 0 ? args[outIdx + 1] : "data/memory-dump.json";

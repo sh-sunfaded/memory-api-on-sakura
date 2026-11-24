@@ -7,6 +7,7 @@ CREATE INDEX IF NOT EXISTS memories_embedding_hnsw_idx
   ON memories USING hnsw (embedding vector_cosine_ops)
   WHERE status = 'active' AND embedding IS NOT NULL;
 
--- trigram（拡張検索用, §7）
+-- trigram (L5, 問題報告書第1報 2026-11-24): 現在の検索経路 (ベクトル近傍のみ) では
+-- 未使用。将来のハイブリッド検索 (キーワードtrigram + ベクトル) のための先行配置。
 CREATE INDEX IF NOT EXISTS memories_trgm_idx
   ON memories USING gin ((title || ' ' || content) gin_trgm_ops);

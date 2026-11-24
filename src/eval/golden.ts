@@ -3,7 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import "dotenv/config";
 import { readFile } from "node:fs/promises";
-import { SearchMemory, searchMemories } from "../../api/[...path]";
+import { parseBody, SearchMemory, searchMemories } from "../../api/[...path]";
 
 // golden評価 v2.2 (2026-11-23, さくらコンテスト準備):
 //   - CSV は2形式を取る。旧: q,expected_id / 新: q,scope,expected_id (scopeは"type:id")
@@ -13,15 +13,18 @@ import { SearchMemory, searchMemories } from "../../api/[...path]";
 //   - v2.2: goldenのscopeは期待IDの通り project:memory_api に固定。DEFAULT_SCOPE_*
 //     環境変数が予想外の値でも検収が揺れないようにした(環境変数の汚染事故への実測対応)。
 //     CSVにscope列がある行はそちらを優先する。
-// GATE は10問体制から効く。判定条件は旧版と同一。
+// GATE は30問体制から効く。判定条件は旧版と同一。
+// M06 (2026-11-24): splitCsvLine の引用符外の列が1字も蓄積されない欠損を修正。
+//   else 節が無かったため旧2列CSV (q quoted / expected_id 素) も全行 skip で
+//   golden eval が実行不能になっていた (node 実機再現で確定)。1行追加のみ。
 const GATE_TOP1 = 0.7;
 const GATE_TOP3 = 0.9;
 const GOLDEN_SCOPE = { type: "project", id: "memory_api" } as const;
 
-interface GoldenRow { q: string; scope: { type: string; id: string }; expected: string }
+type GoldenRow = { q: string; scope: { type: string; id: string }; expected: string }
 
 // 引用符を含む最小CSV行パーサ(golden.csvの""対応)
-function splitCsvLine(line: string): string[] {
+const splitCsvLine = (line: string): string[] => {
   const out: string[] = [];
   let cur = "";
   let quoted = false;
@@ -40,13 +43,13 @@ function splitCsvLine(line: string): string[] {
   return out.map((s) => s.trim());
 }
 
-function parseScope(s: string): { type: string; id: string } | null {
+const parseScope = (s: string): { type: string; id: string } | null => {
   // "project:rinka" 形式。不一致なら null (= GOLDEN_SCOPE にfallback)
   const m = s.match(/^(project|user):([^\s:]+)$/);
   return m ? { type: m[1], id: m[2] } : null;
 }
 
-async function loadGolden(): Promise<GoldenRow[]> {
+const loadGolden = async (): Promise<GoldenRow[]> => {
   const raw = await readFile(new URL("../../data/golden.csv", import.meta.url), "utf8");
   const lines = raw.split(/\r?\n/).map((s) => s.trim()).filter((s) => s !== "");
   if (lines.length === 0) throw new Error("golden.csv が空");
@@ -69,17 +72,17 @@ async function loadGolden(): Promise<GoldenRow[]> {
   return rows;
 }
 
-function percentile(sorted: number[], p: number): number {
+const percentile = (sorted: number[], p: number): number => {
   if (sorted.length === 0) return 0;
   const idx = Math.min(sorted.length - 1, Math.ceil((p / 100) * sorted.length) - 1);
   return sorted[Math.max(0, idx)];
 }
 
-function validScope(s: { type: string; id: string }): boolean {
+const validScope = (s: { type: string; id: string }): boolean => {
   return s.type.trim() === "project" && s.id.trim() !== "";
 }
 
-async function main() {
+const main = async () => {
   const asJson = process.argv.includes("--json");
 
   // Secretプレースホルダーの事前検出(envの未設定・プレースホルダー残りを弾く)
@@ -101,7 +104,7 @@ async function main() {
 
   for (const row of rows) {
     const scope = validScope(row.scope) ? { type: "project", id: row.scope.id.trim() } : GOLDEN_SCOPE;
-    const parsed = SearchMemory.safeParse({ scope, q: row.q, limit: 3 });
+    const parsed = parseBody(SearchMemory)({ scope, q: row.q, limit: 3 });
     if (!parsed.success) {
       console.error("invalid query: " + row.q
         + "\n  issues: " + JSON.stringify(parsed.error.issues));
@@ -151,8 +154,9 @@ async function main() {
   console.log("latency(ms) p50:", report.latency_ms.p50, "p95:", report.latency_ms.p95, "max:", report.latency_ms.max);
   if (misses.length > 0) console.log("misses:\n  " + misses.join("\n  "));
 
-  if (rows.length < 10) {
-    console.log("NOTE: 10件未満なので率は参考値。本戦は30問に育てる");
+// L4 (第1報, 2026-11-24): ゲートは30問体制から効く (10問の暫定敷居は廃止)。
+  if (rows.length < 30) {
+    console.log("NOTE: 30問未満なので率は参考値。本戦は30問に育てる");
   } else {
     if (top1Rate < GATE_TOP1 || top3Rate < GATE_TOP3) {
       console.error("GATE FAILED: top1>=" + GATE_TOP1 + " top3>=" + GATE_TOP3);
