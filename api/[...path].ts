@@ -1841,7 +1841,6 @@ const honoExecutionCtx = {
   waitUntil: (_p: Promise<unknown>): void => {
     // 常駐プロセスでは応答後も生き続けるため、載せなくても書込みは完了する
   },
-  },
   passThroughOnException: (): void => {},
   props: {} as Record<string, unknown>,
 };
